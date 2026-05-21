@@ -1,0 +1,34 @@
+{
+  "name": "pi-mesh",
+  "version": "0.1.0",
+  "description": "Zero-daemon agent mesh for Pi — task board, file reservations, and agent-to-agent messaging",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --import jiti/register 'src/**/*.test.ts'",
+    "test:all": "node --test --import jiti/register 'src/**/*.test.ts' 'test/**/*.test.ts'",
+    "test:ci": "CI=true node --test --import jiti/register 'src/**/*.test.ts' 'test/**/*.test.ts'"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "mesh",
+    "multi-agent",
+    "coordination"
+  ],
+  "files": [
+    "src/**/*.ts",
+    "*.json",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.74.0"
+  },
+  "optionalDependencies": {
+    "pi-workflows": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.19",
+    "jiti": "^2.7.0"
+  },
+  "license": "MIT"
+}
