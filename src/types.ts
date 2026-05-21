@@ -23,10 +23,13 @@ export interface MeshTask {
   claimedBy?: string;
   claimedByName?: string;
   files?: string[];
+  tags?: string[];
   priority: "critical" | "high" | "medium" | "low";
   createdAt: string;
   claimedAt?: string;
-  roleId?: string;      // NEW — auto-dispatch via pi-agent-roles on claim
+  completedAt?: string;
+  roleId?: string;
+}
 
 export interface MeshReservation {
   agentId: string;

@@ -387,13 +387,8 @@ async function handleMeshAction(
             body: `Auto-dispatch: your claimed task ${task.id} has role "${role.name}".\nRun: pi_roles({ action: "dispatch", roleId: "${task.roleId}", task: "${task.description.replace(/"/g, '\\"')}", mode: "blocking" })\nThen: pi_mesh({ action: "task_done", taskId: "${task.id}", summary: "..." })`,
             type: "system",
           });
-          // Also emit EventBus signal for automated dispatch
-          pi.events.emit("mesh:task_dispatch", {
-            agentId: myAgentId,
-            taskId: task.id,
-            roleId: task.roleId,
-            description: task.description,
-          });
+          // Auto-dispatch via pi-agent-roles if roleId set
+        }
         }
       }
       return { status: "ok", data: task, message: `Claimed ${task.id}` };
