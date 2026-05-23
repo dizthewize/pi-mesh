@@ -132,6 +132,40 @@ pi_mesh({ action: "project_state_get", ext: "pi-workflows" })
 └── .lock               # POSIX flock for atomic ops
 ```
 
+## Inline Dashboard
+
+`/mesh` renders a compact status block showing the entire mesh state.
+
+![pi-mesh dashboard](docs/dashboard.png)
+
+```
+Mesh: 3/4 agents │ 2○ 1● 1✓ 0✗ │ 2 reservations
+──────────────────────────────────────────────────────────
+Agent             Status    CWD                   Seen
+● swift_fox       working   /home/u/p/web         12s ago
+● calm_owl        idle      /home/u/p/api         45s ago
+○ bold_hawk       idle      /home/u/p/web         >2m (stale)
+──────────────────────────────────────────────────────────
+🔴 MESH-001  Create auth types   claimed   swift_fox
+🟡 MESH-002  Implement service   open      —
+⚪ MESH-003  Setup database      complete  calm_owl
+──────────────────────────────────────────────────────────
+Reservations:
+  swift_fox → types.ts, auth.ts (1m23s)
+  bold_hawk → handlers.ts (45s)
+──────────────────────────────────────────────────────────
+Messages:
+  +12s  → [swift_fox] Started on MESH-001
+  +45s  ✦ [calm_owl] Standup done
+──────────────────────────────────────────────────────────
+Contracts: auth-types, service-interface
+```
+
+| Command | Description |
+|---------|-------------|
+| `/mesh status` | Show mesh dashboard |
+| `/mesh clear` | Prune stale agents + expired reservations |
+
 ## Command
 
 ```
