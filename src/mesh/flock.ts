@@ -17,10 +17,12 @@ export function flockSync(lockFile: string): boolean {
 
     // Try non-blocking lock first
     try {
-      fs.flockSync(fd, fs.constants.LOCK_EX | fs.constants.LOCK_NB);
+      // @ts-ignore — flockSync is a Unix-specific Node.js extension not in @types/node
+      (fs as any).flockSync(fd, (fs.constants as any).LOCK_EX | (fs.constants as any).LOCK_NB);
     } catch {
       // Fallback: blocking lock
-      fs.flockSync(fd, fs.constants.LOCK_EX);
+      // @ts-ignore
+      (fs as any).flockSync(fd, (fs.constants as any).LOCK_EX);
     }
 
     lockFd = fd;
@@ -36,7 +38,8 @@ export function flockSync(lockFile: string): boolean {
 export function funlock(): void {
   if (lockFd === null) return;
   try {
-    fs.flockSync(lockFd, fs.constants.LOCK_UN);
+    // @ts-ignore
+    fs.flockSync(lockFd, (fs.constants as any).LOCK_UN);
     fs.closeSync(lockFd);
   } catch { /* ignore */ }
   lockFd = null;

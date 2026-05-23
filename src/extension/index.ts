@@ -32,10 +32,10 @@ const PiMeshSchema = Type.Object({
   taskId: Type.Optional(Type.String()),
   paths: Type.Optional(Type.Array(Type.String())),
   ttl: Type.Optional(Type.Number()),
-  status: Type.Optional(Type.StringEnum(["idle", "working", "away"])),
+  status: Type.Optional(Type.String({ enum: ["idle", "working", "away"] })),
   summary: Type.Optional(Type.String()),
   tagFilter: Type.Optional(Type.String()),
-  priorityFilter: Type.Optional(Type.StringEnum(["critical", "high", "medium", "low"])),
+  priorityFilter: Type.Optional(Type.String({ enum: ["critical", "high", "medium", "low"] })),
   ext: Type.Optional(Type.String()),
   data: Type.Optional(Type.Any()),
   item: Type.Optional(Type.String()),
@@ -160,15 +160,6 @@ Usage:
         content: [{ type: "text", text: result.message ?? JSON.stringify(result.data, null, 2) }],
         details: result,
       };
-    },
-
-    renderCall(args, theme) {
-      return `${theme.fg("toolTitle", "pi_mesh")} ${theme.fg("accent", args.action)}`;
-    },
-
-    renderResult(result, _opts, theme) {
-      const status = result.isError ? theme.fg("error", "error") : theme.fg("success", "ok");
-      return `${theme.fg("toolTitle", "pi_mesh")} ${status}`;
     },
   });
 
@@ -388,7 +379,6 @@ async function handleMeshAction(
             type: "system",
           });
           // Auto-dispatch via pi-agent-roles if roleId set
-        }
         }
       }
       return { status: "ok", data: task, message: `Claimed ${task.id}` };

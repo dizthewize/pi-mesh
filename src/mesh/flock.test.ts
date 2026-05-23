@@ -1,9 +1,8 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
 import { withFlock, withFlockAsync, funlock } from "./flock.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { describe, it, expect } from "vitest";
 
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "flock-test-"));
@@ -19,7 +18,7 @@ describe("flock", () => {
         counter++;
         return counter;
       });
-      assert.strictEqual(result, 1);
+      expect(result).toBe(1);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -35,7 +34,7 @@ describe("flock", () => {
         counter++;
         return counter;
       });
-      assert.strictEqual(result, 1);
+      expect(result).toBe(1);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -47,7 +46,7 @@ describe("flock", () => {
       const lockFile = path.join(tmp, ".lock");
       withFlock(lockFile, () => 1);
       const r2 = withFlock(lockFile, () => 2);
-      assert.strictEqual(r2, 2);
+      expect(r2).toBe(2);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -58,7 +57,7 @@ describe("flock", () => {
     try {
       const lockFile = path.join(tmp, ".lock");
       withFlock(lockFile, () => "ok");
-      assert.ok(fs.existsSync(lockFile));
+      expect(fs.existsSync(lockFile)).toBe(true);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }

@@ -1,9 +1,8 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
 import { Registry } from "./registry.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { describe, it, expect } from "vitest";
 
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "registry-test-"));
@@ -22,8 +21,8 @@ describe("Registry", () => {
       status: "idle",
       reservedFiles: [],
     });
-    assert.strictEqual(agent.id, "a1");
-    assert.ok(agent.lastSeenAt);
+    expect(agent.id).toBe("a1");
+    expect(agent.lastSeenAt).toBeTruthy();
   });
 
   it("lists active agents", () => {
@@ -32,7 +31,7 @@ describe("Registry", () => {
     reg.register({ id: "a1", name: "x", model: "m", cwd: "/a", sessionStartedAt: "", status: "idle", reservedFiles: [] });
     reg.register({ id: "a2", name: "y", model: "m", cwd: "/b", sessionStartedAt: "", status: "idle", reservedFiles: [] });
     const list = reg.list();
-    assert.strictEqual(list.length, 2);
+    expect(list.length).toBe(2);
   });
 
   it("heartbeats update lastSeenAt", () => {
@@ -45,8 +44,8 @@ describe("Registry", () => {
     while (Date.now() - start < 50) {} // busy wait ms
     reg.heartbeat("a1");
     const after = reg.get("a1")?.lastSeenAt;
-    assert.ok(after);
-    assert.ok(new Date(after!).getTime() >= new Date(before).getTime());
+    expect(after).toBeTruthy();
+    expect(new Date(after!).getTime() >= new Date(before).getTime()).toBe(true);
   });
 
   it("removes an agent", () => {
@@ -54,7 +53,7 @@ describe("Registry", () => {
     const reg = new Registry({ meshDir: tmp });
     reg.register({ id: "a1", name: "x", model: "m", cwd: "/a", sessionStartedAt: "", status: "idle", reservedFiles: [] });
     reg.remove("a1");
-    assert.strictEqual(reg.get("a1"), null);
+    expect(reg.get("a1")).toBe(null);
   });
 
   it("prunes stale agents", () => {
@@ -71,16 +70,16 @@ describe("Registry", () => {
       );
     }
     const pruned = reg.prune();
-    assert.deepStrictEqual(pruned, ["old"]);
-    assert.strictEqual(reg.get("old"), null);
+    expect(pruned).toStrictEqual(["old"]);
+    expect(reg.get("old")).toBe(null);
   });
 
   it("renames an agent", () => {
     const tmp = tmpDir();
     const reg = new Registry({ meshDir: tmp });
     reg.register({ id: "a1", name: "old", model: "m", cwd: "/a", sessionStartedAt: "", status: "idle", reservedFiles: [] });
-    assert.strictEqual(reg.rename("a1", "new-name"), true);
-    assert.strictEqual(reg.get("a1")?.name, "new-name");
-    assert.strictEqual(reg.rename("ghost", "no"), false);
+    expect(reg.rename("a1", "new-name")).toBeTruthy();
+    expect(reg.get("a1")?.name).toBe("new-name");
+    expect(reg.rename("ghost", "no")).toBe(false);
   });
 });

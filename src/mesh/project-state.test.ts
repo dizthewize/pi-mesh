@@ -1,9 +1,8 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
 import { ProjectStateStore } from "./project-state.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { describe, it, expect } from "vitest";
 
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "proj-state-test-"));
@@ -14,15 +13,15 @@ describe("ProjectStateStore", () => {
     const tmp = tmpDir();
     const store = new ProjectStateStore(tmp);
     const state = store.load("/home/user/my-project");
-    assert.strictEqual(state.cwd, "/home/user/my-project");
-    assert.ok(state.projectHash);
+    expect(state.cwd).toBe("/home/user/my-project");
+    expect(state.projectHash).toBeTruthy();
 
     store.set(state, "pi-workflows", { wave: 2, status: "complete" });
     store.save(state);
 
     const reloaded = store.load("/home/user/my-project");
     const wf = store.get(reloaded, "pi-workflows") as { wave: number };
-    assert.strictEqual(wf.wave, 2);
+    expect(wf.wave).toBe(2);
   });
 
   it("isolates different projects", () => {
@@ -36,8 +35,8 @@ describe("ProjectStateStore", () => {
     store.set(s2, "test", { value: 2 });
     store.save(s2);
 
-    assert.strictEqual(store.get(store.load("/home/user/project-a"), "test")?.value, 1);
-    assert.strictEqual(store.get(store.load("/home/user/project-b"), "test")?.value, 2);
+    expect(store.get(store.load("/home/user/project-a"), "test")?.value).toBe(1);
+    expect(store.get(store.load("/home/user/project-b"), "test")?.value).toBe(2);
   });
 
   it("lists tracked projects", () => {
@@ -46,7 +45,7 @@ describe("ProjectStateStore", () => {
     store.save(store.load("/home/user/proj1"));
     store.save(store.load("/home/user/proj2"));
     const list = store.list();
-    assert.strictEqual(list.length, 2);
+    expect(list.length).toBe(2);
   });
 
   it("removes extension slice", () => {
@@ -55,6 +54,6 @@ describe("ProjectStateStore", () => {
     const s = store.load("/home/user/proj");
     store.set(s, "x", { data: 1 });
     store.remove(s, "x");
-    assert.strictEqual(store.get(s, "x"), undefined);
+    expect(store.get(s, "x")).toBe(undefined);
   });
 });

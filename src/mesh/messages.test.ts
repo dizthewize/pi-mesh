@@ -1,9 +1,8 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
 import { Inbox } from "./messages.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { describe, it, expect } from "vitest";
 
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "inbox-test-"));
@@ -19,8 +18,8 @@ describe("Inbox", () => {
       to: "a2",
       body: "auth is done",
     });
-    assert.strictEqual(msg.to, "a2");
-    assert.strictEqual(msg.body, "auth is done");
+    expect(msg.to).toBe("a2");
+    expect(msg.body).toBe("auth is done");
   });
 
   it("lists messages for recipient", () => {
@@ -31,18 +30,18 @@ describe("Inbox", () => {
     inbox.send({ from: "a1", fromName: "x", to: "all", body: "broadcast" });
 
     const a2Inbox = inbox.inbox("a2");
-    assert.strictEqual(a2Inbox.length, 2); // dm + broadcast
-    assert.ok(a2Inbox.some((m) => m.body === "hi"));
-    assert.ok(a2Inbox.some((m) => m.body === "broadcast"));
+    expect(a2Inbox.length).toBe(2); // dm + broadcast
+    expect(a2Inbox.some((m) => m.body === "hi")).toBe(true);
+    expect(a2Inbox.some((m) => m.body === "broadcast")).toBe(true);
   });
 
   it("tracks unread messages", () => {
     const tmp = tmpDir();
     const inbox = new Inbox({ meshDir: tmp });
     inbox.send({ from: "a1", fromName: "x", to: "a2", body: "hi" });
-    assert.strictEqual(inbox.unreadFor("a2").length, 1);
+    expect(inbox.unreadFor("a2").length).toBe(1);
     inbox.markRead(inbox.unreadFor("a2")[0].id, "a2");
-    assert.strictEqual(inbox.unreadFor("a2").length, 0);
+    expect(inbox.unreadFor("a2").length).toBe(0);
   });
 
   it("prunes old messages", () => {
@@ -59,7 +58,7 @@ describe("Inbox", () => {
       fs.writeFileSync(p, JSON.stringify(data, null, 2));
     }
     const removed = inbox.prune(0); // everything older than now
-    assert.strictEqual(removed, 1);
-    assert.strictEqual(inbox.inbox("a2").length, 0);
+    expect(removed).toBe(1);
+    expect(inbox.inbox("a2").length).toBe(0);
   });
 });
