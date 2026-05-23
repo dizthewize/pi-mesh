@@ -16,6 +16,7 @@ import { TaskBoard } from "../mesh/tasks.js";
 import { Inbox } from "../mesh/messages.js";
 import { ProjectStateStore } from "../mesh/project-state.js";
 import { generateAgentName, truncate } from "../utils.js";
+import { MeshWidget } from "../mesh/widget.js";
 import type { MeshAction, PiMeshParams, PiMeshResult, MeshAgent } from "../types.js";
 
 const MESH_DIR = path.join(os.homedir(), ".pi", "agent", "mesh");
@@ -52,6 +53,50 @@ export default function piMeshExtension(pi: ExtensionAPI) {
   const reservations = new ReservationStore({ meshDir: MESH_DIR });
   const tasks = new TaskBoard({ meshDir: MESH_DIR });
   const inbox = new Inbox({ meshDir: MESH_DIR });
+
+  // ── TUI Widget: ambient mesh status ──
+  let activeWidget: MeshWidget | null = null;
+  let widgetCtx: ExtensionContext | null = null;
+  let widgetPoller: NodeJS.Timeout | null = null;
+  const WIDGET_KEY = "pi-mesh-ambient";
+
+  function ensureWidget(ctx: ExtensionContext): void {
+    if (!ctx.hasUI) return;
+    widgetCtx = ctx;
+    if (widgetPoller) return; // already running
+
+    widgetPoller = setInterval(() => {
+      if (!widgetCtx || !widgetCtx.hasUI) return;
+
+      // Check if any agents are working
+      const agents = registry.list();
+      const working = agents.filter((a) => a.status === "working" && !isStale(a.lastSeenAt, 60_000));
+
+      if (working.length === 0 && activeWidget) {
+        // All idle — hide widget
+        widgetCtx.ui.setWidget(WIDGET_KEY, undefined);
+        activeWidget.dispose();
+        activeWidget = null;
+        return;
+      }
+
+      if (working.length > 0) {
+        if (!activeWidget) {
+          // Show widget
+          widgetCtx.ui.setWidget(WIDGET_KEY, (tui, theme) => {
+            const widget = new MeshWidget(tui, theme);
+            activeWidget = widget;
+            return widget;
+          });
+        }
+        // Widget already showing — it polls internally
+      }
+    }, 2000);
+  }
+
+  function isStale(lastSeenAt: string, thresholdMs: number): boolean {
+    return Date.now() - new Date(lastSeenAt).getTime() > thresholdMs;
+  }
 
   // ── Bridge: respond to inter-extension mesh requests via EventBus ──
   pi.events.on("mesh:setProjectState:request", async (data) => {
@@ -144,6 +189,7 @@ Usage:
     parameters: PiMeshSchema,
 
     async execute(_toolCallId, rawParams, _signal, _onUpdate, ctx) {
+      ensureWidget(ctx);
       const params = rawParams as PiMeshType;
       const result = await handleMeshAction(params, ctx, {
         registry,
@@ -164,8 +210,9 @@ Usage:
   });
 
   pi.registerCommand("mesh", {
-    description: "Show mesh dashboard: /mesh [status|clear]",
-    handler: async (args, _ctx) => {
+    description: "Show mesh dashboard: /mesh [status|clear|widget]",
+    handler: async (args, ctx) => {
+      ensureWidget(ctx);
       const { readMeshSnapshot, formatMeshDashboard, formatMeshCompact } = await import("../dashboard.js");
       const action = args[0] ?? "status";
 
