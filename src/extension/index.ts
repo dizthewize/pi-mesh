@@ -164,11 +164,31 @@ Usage:
   });
 
   pi.registerCommand("mesh", {
-    description: "Open mesh dashboard",
-    handler: async (_args, ctx) => {
-      const peers = registry.list().length;
-      const unread = myAgentId ? inbox.unreadFor(myAgentId).length : 0;
-      ctx.ui.notify(`Mesh: ${peers} peers, ${unread} unread`, "info");
+    description: "Show mesh dashboard: /mesh [status|clear]",
+    handler: async (args, _ctx) => {
+      const { readMeshSnapshot, formatMeshDashboard, formatMeshCompact } = await import("../dashboard.js");
+      const action = args[0] ?? "status";
+
+      if (action === "clear") {
+        // Prune stale agents and expired reservations
+        const pruned = registry.prune();
+        const expired = reservations.pruneExpired();
+        pi.sendUserMessage(`Pruned ${pruned.length} stale agents, ${expired} expired reservations`);
+        return;
+      }
+
+      const snap = readMeshSnapshot();
+      if (snap.agents.length === 0 && snap.tasks.length === 0) {
+        pi.sendUserMessage("Mesh is empty. Join with: pi_mesh({ action: \"join\" })");
+        return;
+      }
+
+      const lines: string[] = [];
+      lines.push("## Mesh Dashboard\n");
+      lines.push("```");
+      lines.push(formatMeshDashboard(snap));
+      lines.push("```");
+      pi.sendUserMessage(lines.join("\n"));
     },
   });
 
