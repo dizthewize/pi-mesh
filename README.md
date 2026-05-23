@@ -163,8 +163,25 @@ Contracts: auth-types, service-interface
 
 | Command | Description |
 |---------|-------------|
-| `/mesh status` | Show mesh dashboard |
+| `/mesh status` | Show mesh dashboard (markdown) |
 | `/mesh clear` | Prune stale agents + expired reservations |
+
+## Live TUI Widget
+
+The ambient widget **auto-appears** when mesh agents are working:
+
+```
+┌─ Mesh: 3 peers │ ●2 ○1 ──────────────────────────────────────┐
+│  ● backend-ecommerce  TASK-001  handlers.ts  2m13s             │
+│  ● backend-seo        TASK-002  schema.ts    7m48s             │
+│  ○ bold_hawk          +1 more idle                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+- **Auto-shows** when ≥1 agent has `status: "working"`
+- **Polls** mesh filesystem every 2 seconds
+- **Auto-dismisses** when all agents idle for >5 minutes
+- Shows task IDs, reserved files, live durations
 
 ## Command
 
